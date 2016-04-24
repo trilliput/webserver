@@ -313,6 +313,11 @@
                 <module type="\AppserverIo\WebServer\Modules\FastCgiModule" />
                 <module type="\AppserverIo\WebServer\Modules\ProxyModule" />
                 <!-- RESPONSE_PRE hook -->
+                <module type="\AppserverIo\WebServer\Modules\SsiModule">
+                    <params>
+                        <param name="includeAllowFileExtension" type="string">.html</param>
+                    </params>
+                </module>
                 <module type="\AppserverIo\WebServer\Modules\HeaderModule" />
                 <module type="\AppserverIo\WebServer\Modules\DeflateModule" />
             </modules>
@@ -514,6 +519,11 @@
                 <module type="\AppserverIo\WebServer\Modules\PhpModule" />
                 <module type="\AppserverIo\WebServer\Modules\FastCgiModule"/>
                 <!-- RESPONSE_PRE hook -->
+                <module type="\AppserverIo\WebServer\Modules\SsiModule">
+                    <params>
+                        <param name="includeAllowFileExtension" type="string">.html</param>
+                    </params>
+                </module>
                 <module type="\AppserverIo\WebServer\Modules\HeaderModule" />
                 <module type="\AppserverIo\WebServer\Modules\DeflateModule"/>
             </modules>
