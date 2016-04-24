@@ -90,6 +90,16 @@ class SsiModule implements HttpModuleInterface, ModuleConfigurationAwareInterfac
      */
     protected $moduleConfiguration;
 
+    protected function _parseDirectiveEcho($tag, $variables)
+    {
+        $tagParts = explode(' ', $tag);
+        if (count($tagParts) !== 3) {
+            return false;
+        }
+        $varName = substr($tagParts[1], 5, strlen($tagParts[1]) - 6);
+        return (isset($variables[$varName])) ? $variables[$varName] : false;
+    }
+
     /**
      * Initiates the module
      *
@@ -163,7 +173,52 @@ class SsiModule implements HttpModuleInterface, ModuleConfigurationAwareInterfac
             return false;
         }
 
+        $response->appendBodyStream('SSI Module');
+
         return true;
+    }
+
+    /**
+     * Parse the give string
+     *
+     * @param string $data The content data to parse
+     * @return string Parsed string
+     */
+    public function parseContent($data, $variables = array())
+    {
+        $matches = array();
+
+        $directiveNameRule = '[a-zA-Z_]*';
+        $paramNameRule = '[a-zA-Z_]*';
+        $paramValueRule = '"[^"]*"';
+
+        preg_match_all('/<!--#(' . $directiveNameRule . ') ((' . $paramNameRule . '=' . $paramValueRule . ' )*)-->/', $data, $matches, PREG_OFFSET_CAPTURE);
+        $directiveTags = $matches[0];
+        $directiveNames = $matches[1];
+
+        $cursor = 0;
+        $parsedContent = '';
+        foreach ($directiveNames as $index => $directiveNameInfo) {
+            $directiveTag = $directiveTags[$index][0];
+            $directivePosition = $directiveTags[$index][1];
+            $directiveName = $directiveNameInfo[0];
+
+            $directiveMethodName = '_parseDirective' . $directiveName;
+            $directiveParsedResult = false;
+            if (method_exists($this, $directiveMethodName)) {
+                $directiveParsedResult = $this->$directiveMethodName($directiveTag, $variables);
+            }
+
+            if ($directiveParsedResult !== false) {
+                $parsedContent .= substr($data, $cursor, $directivePosition - $cursor);
+                $parsedContent .= $directiveParsedResult;
+                $cursor = $directivePosition + strlen($directiveTag);
+            }
+        }
+        if (strlen($parsedContent) > 0) {
+            $parsedContent .= substr($data, $cursor);
+        }
+        return $parsedContent;
     }
 
     /**
